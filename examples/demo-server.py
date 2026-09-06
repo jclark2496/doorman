@@ -37,6 +37,10 @@ PEOPLE = [
 ]
 
 
+LABEL = """<script>
+setTimeout(function () { document.getElementById("where").textContent = %s; }, 60);
+</script>"""
+
 SHOW = """<script>
 setTimeout(function () {
   var want = %s, row = %s;
@@ -75,12 +79,16 @@ class H(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(b)
 
     def do_GET(self):
-        # A screenshot convenience, and nothing the real service does: /admin.html?open=time&row=bob
-        # serves the page with a script appended that clicks that row's button once it has loaded, so
-        # the drawers and the handoff can be captured headlessly. web/ is never modified.
-        if self.path.startswith("/admin.html?"):
+        # A screenshot convenience, and nothing the real service does. Either page accepts
+        # ?where=example.com to relabel the host line, and /admin.html also takes ?open=time&row=bob
+        # to click that row's button once the page has loaded, so the drawers and the handoff can be
+        # captured headlessly. web/ is never modified.
+        head = self.path.split("?", 1)[0]
+        if "?" in self.path and head in ("/admin.html", "/login.html", "/denied.html"):
             q = dict(urllib.parse.parse_qsl(self.path.split("?", 1)[1]))
-            html = open(os.path.join(ROOT, "admin.html"), encoding="utf-8").read()
+            html = open(os.path.join(ROOT, head.lstrip("/")), encoding="utf-8").read()
+            if q.get("where"):
+                html = html.replace("</body>", LABEL % json.dumps(q["where"]) + "</body>")
             if q.get("open"):
                 html = html.replace("</body>", SHOW % (json.dumps(q["open"]), json.dumps(q.get("row", "bob"))) + "</body>")
             b = html.encode()
