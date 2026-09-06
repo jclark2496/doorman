@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who can get in</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="admin-page">
+<main class="admin">
+  <p class="where" id="where">example.com</p>
+  <h1 class="say" id="say">Who can get in.</h1>
+
+  <!-- the people -->
+  <section class="people" id="people" hidden>
+    <ol class="rows" id="rows"></ol>
+  </section>
+
+  <!-- invite someone -->
+  <section class="ask" id="askBox" hidden>
+    <h2 class="ask-h">Let someone in</h2>
+    <form class="ask-form" id="askForm">
+      <div class="fld">
+        <label for="who">Their name</label>
+        <input id="who" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ana">
+      </div>
+      <div class="fld">
+        <span class="lbl">What they can reach</span>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="fld">
+        <span class="lbl">For how long</span>
+        <div class="chips" id="ttls"></div>
+      </div>
+      <div class="fld">
+        <span class="lbl">How they get in</span>
+        <div class="chips">
+          <button type="button" class="chip on" id="kGuest">A code they type</button>
+          <button type="button" class="chip" id="kMember">A passkey they make</button>
+        </div>
+      </div>
+      <div class="fld go-row">
+        <button class="enter" type="submit">Make the invite</button>
+        <span class="hint" id="askNote"></span>
+      </div>
+    </form>
+  </section>
+
+  <!-- the handoff: shown once, so it gets the page -->
+  <section class="handoff" id="handoff" hidden>
+    <p class="handoff-who" id="handoffWho"></p>
+    <p class="code-big" id="codeBig"></p>
+    <p class="link-txt" id="codeLink"></p>
+    <div class="row">
+      <button class="enter" id="copyCode" type="button">Copy the code</button>
+      <button class="alt" id="copyLink" type="button">Copy the link</button>
+      <button class="alt" id="doneHandoff" type="button">Done</button>
+      <span class="hint" id="copied"></span>
+    </div>
+    <p class="hint">Say it out loud or send the link. It is not shown again.</p>
+  </section>
+</main>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>

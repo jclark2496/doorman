@@ -1,0 +1,295 @@
+/* Reference login for a passkey gate.
+   Everything visual is a token below. To reskin, change these nine values and nothing else. */
+:root {
+  --ground: #101F1C;          /* the field you are standing on, before you are through */
+  --ground-through: #17342C;  /* and after */
+  --ink: #EDE6DA;             /* warm off-white; the only text colour that carries weight */
+  --dim: #6E827E;             /* labels, hints, anything that is not the sentence */
+  --signal: #E9A178;          /* one warm accent, used for focus and the moment of passing */
+  --edge: rgba(237, 230, 218, .16);
+  --edge-lit: rgba(233, 161, 120, .55);
+  --wrong: #E97A6E;
+  --slot: rgba(237, 230, 218, .05);
+}
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("fonts/BricolageGrotesque-var.woff2") format("woff2");
+  font-weight: 300 800;
+  font-display: swap;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* .acts and .code set `display`, which would otherwise win over the browser's
+   [hidden] rule and leave a hidden element on screen. */
+[hidden] { display: none !important; }
+
+html { background: var(--ground); }
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: clamp(20px, 6vw, 64px);
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .9s cubic-bezier(.2, .7, .2, 1);
+}
+
+/* The one animation on the page: the ground lifts when you cross it. */
+body.through { background: var(--ground-through); }
+
+.gate {
+  width: min(36rem, 100%);
+  display: grid;
+  gap: clamp(20px, 3.4vw, 34px);
+}
+
+/* Which door this is. Small, quiet, monospace — it is data, not voice. */
+.where {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.where::before { content: "↳ "; opacity: .55; }
+
+/* The hero: a sentence that says where you are in the ceremony. It is the page. */
+.say {
+  margin: 0;
+  font-size: clamp(2.1rem, 7.4vw, 4.4rem);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+  max-width: 18ch;
+  transition: color .3s ease;
+}
+.say.wrong { color: var(--wrong); }
+.say .name { font-weight: 700; }
+
+.acts { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+/* The primary action. A bar, not a pill — this is a threshold, not a form submit. */
+.key {
+  appearance: none;
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  padding: 15px 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color .18s ease, background-color .18s ease, transform .18s ease;
+}
+.key:hover { border-color: var(--edge-lit); background: rgba(233, 161, 120, .07); }
+.key:active { transform: translateY(1px); }
+
+/* Three ascending strokes: the shape of a key's teeth, not a padlock. */
+.key .teeth { display: inline-flex; align-items: flex-end; gap: 3px; height: 15px; }
+.key .teeth i { width: 3px; background: var(--signal); display: block; }
+.key .teeth i:nth-child(1) { height: 13px; }
+.key .teeth i:nth-child(2) { height: 6px; }
+.key .teeth i:nth-child(3) { height: 10px; }
+
+.alt {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--dim);
+  font-size: .95rem;
+  padding: 6px 0;
+  text-decoration: underline;
+  text-decoration-color: var(--edge);
+  text-underline-offset: 5px;
+  transition: color .18s ease, text-decoration-color .18s ease;
+}
+.alt:hover { color: var(--ink); text-decoration-color: var(--edge-lit); }
+
+/* The signature: an invite code has a shape, so the field has that shape too.
+   Three words and two digits, in four slots, exactly as the code is written and spoken. */
+.code { display: grid; gap: 20px; justify-items: start; }
+.slots { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pair { display: inline-flex; align-items: center; gap: 6px; }
+
+.slots input {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: clamp(15px, 2.4vw, 19px);
+  color: var(--ink);
+  background: var(--slot);
+  border: 1px solid var(--edge);
+  border-radius: 0;
+  padding: 13px 10px;
+  text-align: center;
+  letter-spacing: .02em;
+  transition: border-color .16s ease, background-color .16s ease;
+}
+.slots input::placeholder { color: var(--dim); opacity: .5; }
+.slots input:focus { outline: none; border-color: var(--edge-lit); background: rgba(233, 161, 120, .08); }
+.slots .w { width: 9.5ch; }
+.slots .d { width: 4.5ch; }
+.tie { color: var(--dim); user-select: none; }
+
+.enter {
+  appearance: none;
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--ink);
+  font-size: .95rem;
+  font-weight: 600;
+  padding: 12px 22px;
+  transition: border-color .18s ease, background-color .18s ease;
+}
+.enter:hover { border-color: var(--edge-lit); background: rgba(233, 161, 120, .07); }
+
+.row { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+
+.hint {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--dim);
+  letter-spacing: .02em;
+}
+
+:where(a, button, input):focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
+.denied .say { max-width: 22ch; }
+.denied a { color: var(--ink); text-decoration-color: var(--edge-lit); text-underline-offset: 5px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* The passkey autofill hint lives on a field nobody sees or tabs to. Off-screen rather than
+   display:none, because a hidden field is not offered a credential by the browser. */
+.conditional {
+  position: fixed;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   The admin page. Same nine tokens, same rules: a bar is not a pill, the
+   display face carries names and nothing else, and data is set in mono so a
+   date and a site name line up down the page.
+   ========================================================================= */
+
+.admin-page { display: block; }
+body.admin-page { place-items: start center; }
+
+.admin {
+  width: min(58rem, 100%);
+  display: grid;
+  gap: clamp(18px, 2.6vw, 28px);
+  align-content: start;
+}
+.admin .say { font-size: clamp(1.9rem, 5vw, 3.1rem); max-width: 24ch; }
+
+/* -- the list -- */
+.rows { list-style: none; margin: 0; padding: 0; display: grid; }
+.who {
+  display: grid;
+  grid-template-columns: minmax(9rem, 1fr) auto;
+  gap: 6px 20px;
+  align-items: baseline;
+  padding: 16px 0;
+  border-top: 1px solid var(--edge);
+}
+.who:last-child { border-bottom: 1px solid var(--edge); }
+
+.who .nm { font-size: 1.35rem; font-weight: 600; letter-spacing: -.02em; }
+.who .nm .role {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--dim); font-weight: 400; margin-left: 10px; vertical-align: middle;
+}
+.who.gone .nm { color: var(--dim); }
+/* the line goes through the name only -- a parent's decoration cannot be lifted off a child,
+   so it is never set on the parent in the first place. */
+.who.gone .n { text-decoration: line-through; }
+
+.who .meta {
+  grid-column: 1; margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px; color: var(--dim); letter-spacing: .01em;
+}
+.who .meta .sites { color: var(--ink); }
+.who .acts { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 18px; align-items: center; }
+
+/* -- what opens under a row -- */
+.drawer { grid-column: 1 / -1; padding: 14px 0 4px; display: grid; gap: 12px; justify-items: start; }
+.drawer .hint { margin: 0; }
+.drawer.warn .hint { color: var(--wrong); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  appearance: none;
+  font: inherit; font-size: .92rem;
+  background: var(--slot); color: var(--dim);
+  border: 1px solid var(--edge); border-radius: 0;
+  padding: 8px 14px;
+  transition: color .16s ease, border-color .16s ease, background-color .16s ease;
+}
+.chip:hover:not(:disabled) { color: var(--ink); border-color: var(--edge-lit); }
+.chip.on { color: var(--ground); background: var(--signal); border-color: var(--signal); font-weight: 600; }
+.chip.danger { color: var(--wrong); border-color: rgba(233, 122, 110, .45); }
+.chip.danger:hover:not(:disabled) { color: var(--ground); background: var(--wrong); border-color: var(--wrong); }
+.chip:disabled { opacity: .45; cursor: default; }
+
+.alt:disabled { opacity: .4; cursor: default; text-decoration: none; }
+
+/* -- invite -- */
+.ask { display: grid; gap: 16px; padding-top: 6px; }
+.ask-h { margin: 0; font-size: 1.15rem; font-weight: 600; letter-spacing: -.01em; }
+.ask-form { display: grid; gap: 16px; }
+.fld { display: grid; gap: 8px; justify-items: start; }
+.fld label, .fld .lbl {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim);
+}
+.fld input {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 1rem; color: var(--ink);
+  background: var(--slot); border: 1px solid var(--edge); border-radius: 0;
+  padding: 12px 14px; width: 18ch;
+  transition: border-color .16s ease, background-color .16s ease;
+}
+.fld input::placeholder { color: var(--dim); opacity: .5; }
+.fld input:focus { outline: none; border-color: var(--edge-lit); background: rgba(233, 161, 120, .08); }
+.go-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+
+/* -- the handoff -- */
+.handoff { display: grid; gap: 18px; justify-items: start; }
+.handoff-who, .link-txt {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px; color: var(--dim); word-break: break-all;
+}
+.code-big {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: clamp(1.5rem, 5.2vw, 2.6rem);
+  font-weight: 500; letter-spacing: -.02em; color: var(--signal);
+}

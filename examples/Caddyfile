@@ -1,0 +1,73 @@
+# doorman behind Caddy. Two things matter and the rest is ordinary Caddy.
+#
+#   1. /_auth/* on the origin proxies to the service. That path is all doorman serves, and it has to
+#      be on the origin, because that is where the login page and the session cookie live.
+#   2. Every protected host imports `gate`, a forward_auth to the same service. Caddy asks doorman
+#      about each request; doorman answers 200, or a redirect to the login or denied page.
+#
+# The login and denied pages themselves stay outside the gate. Put them behind it and nobody can
+# reach the door to knock on it.
+
+(gate) {
+	forward_auth 127.0.0.1:8401 {
+		uri /_auth/verify
+		# The answer depends on which site is being asked for, so the Host header has to survive.
+		header_up Host {host}
+		copy_headers X-Doorman-User X-Doorman-Role
+	}
+}
+
+(headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
+
+# ---- the origin: serves the login page, and proxies the service ----
+example.com {
+	root * /var/www/example.com
+	encode gzip
+	import headers
+
+	handle /_auth/* {
+		reverse_proxy 127.0.0.1:8401 {
+			# Nothing today depends on this: with no trusted_proxies configured Caddy already
+			# discards a client-supplied X-Forwarded-For and writes {remote_host} itself. It keeps
+			# the header honest if a CDN or another proxy ever sits in front.
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	# The door has to be reachable without being through it.
+	@open path /login.html /denied.html /assets/* /favicon.ico /robots.txt
+	handle @open {
+		file_server
+	}
+
+	handle {
+		import gate
+		file_server
+	}
+}
+
+# ---- a protected site ----
+notes.example.com {
+	root * /var/www/notes.example.com
+	encode gzip
+	import headers
+	# Gated pages must not become browser-cacheable just because Caddy is serving them.
+	@dynamic path / *.html *.json
+	header @dynamic Cache-Control "private, no-store"
+	import gate
+	file_server
+}
+
+# ---- a protected app rather than files ----
+photos.example.com {
+	import headers
+	import gate
+	reverse_proxy 127.0.0.1:9000
+}

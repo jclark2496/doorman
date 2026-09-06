@@ -1,0 +1,34 @@
+# /etc/systemd/system/doorman.service
+[Unit]
+Description=doorman — one login for every site you own
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Type=simple, so systemd reports this active the moment the process starts — before the socket is
+# bound. Anything that checks the service straight after a restart has to retry; docs/runbook.md
+# carries the bounded retry to paste.
+Type=simple
+User=doorman
+Group=doorman
+WorkingDirectory=/opt/doorman/app
+EnvironmentFile=/opt/doorman/doorman.env
+ExecStart=/opt/doorman/venv/bin/python /opt/doorman/app/doorman.py serve
+Restart=on-failure
+RestartSec=2
+
+# It needs one directory and nothing else on the box.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/doorman/data
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main class="gate">
+  <p class="where" id="where">example.com</p>
+
+  <h1 class="say" id="say">One moment.</h1>
+
+  <div class="acts" id="acts" hidden>
+    <button class="key" id="key" type="button">
+      <span class="teeth" aria-hidden="true"><i></i><i></i><i></i></span>
+      Use your passkey
+    </button>
+    <button class="alt" id="alt" type="button">I have an invite code</button>
+  </div>
+
+  <form class="code" id="code" hidden>
+    <!-- Each word is grouped with the hyphen that follows it, so a narrow screen wraps
+         between words and never leaves a hyphen stranded at the start of a line. -->
+    <div class="slots">
+      <span class="pair">
+        <input class="w" id="w1" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="word" aria-label="First word of your invite code">
+        <span class="tie" aria-hidden="true">–</span>
+      </span>
+      <span class="pair">
+        <input class="w" id="w2" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="word" aria-label="Second word">
+        <span class="tie" aria-hidden="true">–</span>
+      </span>
+      <span class="pair">
+        <input class="w" id="w3" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="word" aria-label="Third word">
+        <span class="tie" aria-hidden="true">–</span>
+      </span>
+      <input class="d" id="w4" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="2" placeholder="00" aria-label="Two digits">
+    </div>
+    <div class="row">
+      <button class="enter" type="submit">Enter</button>
+      <button class="alt" id="back" type="button">Use a passkey instead</button>
+    </div>
+    <p class="hint" id="hint">paste the whole code and it will fall into place</p>
+  </form>
+</main>
+
+<!-- A hidden field carrying the passkey autofill hint, so the browser can offer
+     a credential without the visitor asking. It is never typed into. -->
+<input id="cond" class="conditional" type="text" autocomplete="username webauthn" tabindex="-1" aria-hidden="true">
+
+<script src="assets/js/login.js"></script>
+</body>
+</html>
