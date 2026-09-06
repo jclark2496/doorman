@@ -1,7 +1,18 @@
 # Hermes: add doorman to forkthis.ai
 
-A new project shipped and wants a card on the projects page. This is a
-static-site change on VPS1 — no service, no Caddy change.
+A new project shipped and wants a card on the projects page. Two files change on
+one box — no service restart, no Caddy change.
+
+**The box is VPS1, `root@145.223.75.97`.** Not VPS2. Everything doorman and
+sandalsrocks has been deployed to recently lives on `2.25.183.70`; forkthis.ai
+does not. Confirm before you write anything:
+
+```bash
+dig +short forkthis.ai A        # expect 145.223.75.97
+ssh root@145.223.75.97 "ls /var/www/forkthis.ai/assets/js/projects.js"
+```
+
+Every command below runs on that box, over ssh.
 
 **doorman** — <https://github.com/jclark2496/doorman> (public)
 One login for every site you own: passkeys for the owner, three-word invite
@@ -16,8 +27,7 @@ lines of Python, one dependency, 87 tests.
 public — do not re-crop or re-shoot it:
 
 ```bash
-curl -fsSL -o /var/www/forkthis.ai/assets/shots/doorman.jpg \
-  https://raw.githubusercontent.com/jclark2496/doorman/main/docs/screenshots/forkthis-card.jpg
+ssh root@145.223.75.97 "curl -fsSL -o /var/www/forkthis.ai/assets/shots/doorman.jpg https://raw.githubusercontent.com/jclark2496/doorman/main/docs/screenshots/forkthis-card.jpg"
 ```
 
 Verify it landed and is the right size before going on:
@@ -62,12 +72,19 @@ Keep a copy of `projects.js` before editing and restore it if the page comes up
 empty:
 
 ```bash
-cp /var/www/forkthis.ai/assets/js/projects.js /var/www/forkthis.ai/assets/js/projects.js.bak
+ssh root@145.223.75.97 "cp /var/www/forkthis.ai/assets/js/projects.js /var/www/forkthis.ai/assets/js/projects.js.bak"
+```
+
+Take that backup **before** editing, not after.
+
+```bash
+ssh root@145.223.75.97 "cp /var/www/forkthis.ai/assets/js/projects.js.bak /var/www/forkthis.ai/assets/js/projects.js"
 ```
 
 ## Constraints
 
-- forkthis.ai only. Do not touch any other site, the auth service, or Caddy.
+- forkthis.ai on VPS1 only. Do not touch VPS2, any other site, the auth service,
+  or Caddy. The two files above are the whole change.
 - Do not modify or push any repository.
 - If the projects page renders empty after the edit, restore the backup and
   report rather than debugging live.
