@@ -1,47 +1,69 @@
 # doorman
 
-One login for every site you own.
+One passkey login for the sites on your domain. Give a guest a short code to
+open just the subdomains you choose.
+
+[Try the local demo](#quickstart) · [Set up Caddy and your first passkey](docs/runbook.md)
+
+<p align="center">
+  <img src="docs/screenshots/passkey.png" width="820" alt="The doorman sign-in page offers a passkey or an invite code">
+</p>
 
 You have a handful of small sites on one domain — a recipe box, a photo dump,
 something half-built you would rather not show anyone yet. You want to reach all
 of them from any of your devices without typing anything, and you want to let one
 other person into one of them for a week without making them an account.
 
-doorman is the thing in front of all of them. You sign in once with Face ID or
-Touch ID and every site is open. Anyone else gets three words and two digits,
-good for exactly the sites and exactly the days you said.
+doorman sits in front of those sites. Caddy asks the same small Python service
+about each request. SQLite holds the access records. The service has one direct
+Python dependency, `webauthn`, and the config needs no shared password or signing secret.
 
-<p align="center">
-  <img src="docs/screenshots/passkey.png" width="820" alt="A dark green page reading “Touch your key to continue.” with a Use your passkey button">
-</p>
+<a id="what-it-actually-does"></a>
 
-It is about a thousand lines of Python, one dependency, and a SQLite file. There
-is no shared password anywhere in it, and no secret in its config.
+## What it can do
 
----
-
-## What it actually does
-
-**You sign in with a passkey.** A real WebAuthn ceremony — discoverable
-credentials, user verification required — so it is Face ID on your phone, Touch
-ID on your laptop, and a synced key on anything else. There is no password to
-phish, reuse, or leave in a config file.
-
-**Everyone else gets a code.** Three words and two digits, said out loud or sent
-as a link: `coral-lounger-palm-42`. It is good for the sites you named, for the
-days you named, on up to three browsers. When it runs out, it runs out.
-
-**Someone you trust gets a passkey too.** A "member" invite is redeemed once and
-enrolls their own passkey on the spot, in that same visit. After that they sign
-in the way you do, into only the sites you gave them.
-
-**Every site is behind the same door.** Caddy asks doorman about each request
-before serving anything, so a site is protected whether it is a folder of HTML or
-an app on a port — with no library, no SDK, and no change to the site itself.
+- **Sign in as the owner.** Use Face ID, Touch ID, or another passkey with user
+  verification. WebAuthn enrollment requires a discoverable passkey, so you can
+  choose it without typing a username. If your passkey provider syncs it, you
+  can also sign in from another device. One session opens every protected site
+  on your domain.
+- **Invite a guest for a visit.** Pick their sites and a time limit. Read out
+  three words and two digits or send a link. A guest code works on up to three
+  browsers and their guest sessions expire with the invite.
+- **Give a regular visitor a passkey.** A member redeems their invite once,
+  enrolls a passkey on that visit, and can return to the sites you granted.
+  Both guests and members can also reach the sign-in host.
+- **Manage access.** See who has a key and which sessions are live. Change
+  someone's sites, extend their time, or revoke access from the admin page.
+  The CLI handles owner enrollment, inspection, and revocation.
+- **Protect static and proxied sites.** The same Caddy `forward_auth` check works
+  for a folder of HTML and an app listening on a port. Each site's own code
+  stays as it is.
 
 <p align="center">
   <img src="docs/screenshots/code.png" width="820" alt="An invite code entry with four fields shaped like the code: three words and two digits">
 </p>
+
+<a id="try-it-without-deploying-anything"></a>
+
+## Quickstart
+
+The local demo needs Git and Python 3. All its sample data lives in memory.
+
+```bash
+git clone https://github.com/jclark2496/doorman.git
+cd doorman
+python3 examples/demo-server.py
+```
+
+Open the [demo sign-in page](http://127.0.0.1:8600/login.html). Choose **I
+have an invite code** if prompted, paste `coral-lounger-palm-42`, and press
+**Enter**. The page briefly shows “You're in.” before redirecting. The
+[admin demo](http://127.0.0.1:8600/admin.html) lists Jill, Bob, and Sam. Try
+the **Sites** or **Time** button on Bob's row. Restarting resets the demo.
+
+The demo simulates an owner and accepts a fixed sample code. For real passkey
+enrollment and access checks, use the [deployment runbook](docs/runbook.md).
 
 ## The one constraint
 
@@ -56,9 +78,8 @@ otherwise would be lying. Sites on another domain need their own doorman.
 
 ## Managing it
 
-There is a reference admin page: who can get in, what each person can reach, how
-long they have, and letting someone new in. Same operations as the CLI, without
-typing them.
+The reference admin page shows who can get in, what each person can reach, and
+how long they have. You can issue the next invite from the same page.
 
 <p align="center">
   <img src="docs/screenshots/admin-list.png" width="820" alt="A list of four people with their roles, sites and state, and Sites / Time / Revoke actions on each">
@@ -67,12 +88,10 @@ typing them.
 Three decisions in there are worth naming, because they are the ones that took a
 second attempt.
 
-**Giving someone longer sends nothing.** Extending moves a person's invite and
-every browser they are already signed in on to the same date at once, so the
-laptop they are reading on simply carries on. Re-inviting would have worked too,
-but it mints a code they have to go and redeem — the answer to "give Bob another
-week" should not be "message Bob". It only ever moves a deadline forward, so
-asking for less than someone already has leaves them alone and says so.
+**Giving someone longer sends nothing.** When you give Bob another week,
+doorman extends his live invites and sessions. He can use the code he already
+has. A browser that calls `/_auth/me` before its cookie expires picks up the new
+deadline. Any deadline already further out stays as it is.
 
 **Revoking asks, and asks the right question.** For someone with a passkey the
 choice that matters is not yes/no — it is whether their key survives. Keep it and
@@ -98,19 +117,6 @@ doorman.py revoke <name> [--keys]
 doorman.py revoke-all-sessions
 ```
 
-## Try it without deploying anything
-
-```bash
-git clone https://github.com/jclark2496/doorman.git && cd doorman
-python3 examples/demo-server.py
-```
-
-Then open <http://127.0.0.1:8600/admin.html>, or `/login.html` and type
-`coral-lounger-palm-42`. It fakes the service in memory — no database, no real
-check — so the pages can be looked at. The passkey path needs a real deployment,
-since a browser will not do WebAuthn against `127.0.0.1` with someone else's
-relying-party ID.
-
 ## Running it for real
 
 ```bash
@@ -123,9 +129,21 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 a Caddyfile, and enrolling your own key. Examples for all of those are in
 [examples/](examples/).
 
-`web/` is the reference front end: login, denied, admin. Copy it into your site's
-web root and restyle it, or write your own against the same endpoints — the pages
-hold no authority, because every route re-checks server-side.
+To customize a fork, set the sign-in domain, protected hosts, site aliases, and
+owner name in the [example environment file](examples/doorman.env.example).
+The [reference pages](web/) cover login, denied access, and administration.
+Copy them into your web root and restyle them, or write your own against the
+same endpoints. The service checks access on the server.
+
+## One design decision
+
+The access rule fits in one function. Given the user, session, requested host,
+current time, and sign-in host, it can answer Caddy without opening SQLite or
+reading the clock. That makes a detail easy to check before you put private
+content on a site. Every signed-in person can reach the sign-in host, and a
+guest needs an explicit grant for any other protected host. The same tests
+check that even the owner loses access when their session expires. [Access
+rule](doorman/gate.py) · [Tests for each role](tests/test_gate.py)
 
 ## How it is put together
 
@@ -138,10 +156,6 @@ doorman/service.py    sessions, invites, and the owner operations
 doorman/http.py       the routes
 doorman/words.py      the invite vocabulary
 ```
-
-`gate.py` is deliberately a pure function of (user, session, host, now). It has
-no database and no clock of its own, so the rule that decides everything can be
-read in one sitting and tested exhaustively.
 
 ## What it is not
 
@@ -174,6 +188,8 @@ A single-use enrollment code once produced two passkeys when redeemed twice in
 quick succession. The fix that stuck was moving the atomic claim ahead of the
 credential write: gating the session was not enough, because the credential was
 already written by then.
+
+[Read the doorman build note on Forkthis](https://forkthis.ai/doorman/).
 
 ## Licence
 
