@@ -15,15 +15,18 @@ of them from any of your devices without typing anything, and you want to let on
 other person into one of them for a week without making them an account.
 
 doorman sits in front of those sites. Caddy asks the same small Python service
-about each request. SQLite holds the access records, and the config needs no
-shared password or signing secret.
+about each request. SQLite holds the access records. The service has one direct
+Python dependency, `webauthn`, and the config needs no shared password or signing secret.
 
 <a id="what-it-actually-does"></a>
 
 ## What it can do
 
 - **Sign in as the owner.** Use Face ID, Touch ID, or another passkey with user
-  verification. One session opens every protected site on your domain.
+  verification. WebAuthn enrollment requires a discoverable passkey, so you can
+  choose it without typing a username. If your passkey provider syncs it, you
+  can also sign in from another device. One session opens every protected site
+  on your domain.
 - **Invite a guest for a visit.** Pick their sites and a time limit. Read out
   three words and two digits or send a link. A guest code works on up to three
   browsers and their guest sessions expire with the invite.
